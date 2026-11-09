@@ -2,103 +2,139 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamWeb - Música Libre y Legal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>StreamWeb Pro - Música Libre</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col justify-between">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between pb-32">
 
-    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md">
-        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <h1 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
-                🎧 StreamWeb Free
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-10 shadow-md">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <h1 class="text-lg font-bold text-cyan-400 flex items-center gap-2">
+                🎵 MiMusica Stream
             </h1>
-            <div class="w-full sm:w-auto flex gap-2 flex-1 max-w-md">
-                <input type="text" id="searchInput" placeholder="Busca artistas, géneros o canciones..." 
-                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-cyan-400">
-                <button onclick="searchMusic()" class="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition">
-                    Buscar
-                </button>
-            </div>
+            <span id="trackCount" class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded-full">3 pistas</span>
+        </div>
+        <!-- Buscador -->
+        <div class="max-w-md mx-auto mt-3">
+            <input type="text" id="searchInput" oninput="searchMusic()" placeholder="Busca artista o canción..." 
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-400 text-slate-200">
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto w-full p-4 flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <section class="md:col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex flex-col">
-            <h2 class="text-lg font-semibold mb-3 text-slate-300">Explorar / Resultados</h2>
-            <div id="trackList" class="space-y-2 overflow-y-auto max-h-[50vh] pr-2">
-                <p class="text-slate-400 text-sm italic">Escribe algo en el buscador o presiona buscar para cargar pistas de prueba en streaming...</p>
-            </div>
-        </section>
+    <!-- Navegación por pestañas -->
+    <nav class="max-w-md mx-auto w-full px-4 mt-3 flex gap-2">
+        <button onclick="switchTab('explore')" id="tabExplore" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 transition">Explorar</button>
+        <button onclick="switchTab('favorites')" id="tabFavorites" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-slate-400 transition">Favoritos ⭐</button>
+        <button onclick="switchTab('history')" id="tabHistory" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-slate-400 transition">Historial 🕒</button>
+    </nav>
 
-        <section class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex flex-col">
-            <h2 class="text-lg font-semibold mb-3 text-slate-300">Favoritos ⭐</h2>
-            <div id="favoritesList" class="space-y-2 overflow-y-auto max-h-[50vh] text-sm text-slate-400">
-                <p class="italic">No hay favoritos guardados aún.</p>
+    <!-- Contenido Principal -->
+    <main class="max-w-md mx-auto w-full p-4 flex-1">
+        <!-- Vista Explorar -->
+        <div id="viewExplore" class="space-y-2">
+            <div id="trackList" class="space-y-2"></div>
+        </div>
+        <!-- Vista Favoritos -->
+        <div id="viewFavorites" class="space-y-2 hidden">
+            <div id="favoritesList" class="space-y-2">
+                <p class="text-slate-500 text-sm text-center py-8">No tienes favoritos guardados aún.</p>
             </div>
-        </section>
+        </div>
+        <!-- Vista Historial -->
+        <div id="viewHistory" class="space-y-2 hidden">
+            <div id="historyList" class="space-y-2">
+                <p class="text-slate-500 text-sm text-center py-8">El historial está vacío.</p>
+            </div>
+        </div>
     </main>
 
-    <footer class="bg-slate-800 border-t border-slate-700 p-4 sticky bottom-0 shadow-lg">
-        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3 w-full sm:w-1/3">
-                <div class="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center text-xl" id="currentCover">🎵</div>
-                <div class="overflow-hidden">
-                    <p id="currentTitle" class="text-sm font-medium truncate">Ninguna pista seleccionada</p>
-                    <p id="currentArtist" class="text-xs text-slate-400 truncate">-</p>
+    <!-- Reproductor Fijo Inferior (Estilo App) -->
+    <footer class="bg-slate-900/95 backdrop-blur border-t border-slate-800 p-4 fixed bottom-0 left-0 right-0 z-20 shadow-2xl">
+        <div class="max-w-md mx-auto flex flex-col gap-3">
+            <!-- Info de la pista y controles de estado -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-xl shrink-0" id="currentCover">🎧</div>
+                    <div class="overflow-hidden">
+                        <p id="currentTitle" class="text-sm font-semibold truncate text-slate-200">Selecciona una pista</p>
+                        <p id="currentArtist" class="text-xs text-slate-400 truncate">Listo para transmitir</p>
+                    </div>
                 </div>
+                <!-- Botón Favorito en reproductor -->
+                <button onclick="toggleCurrentFavorite()" id="currentFavBtn" class="text-xl text-slate-500 hover:text-amber-400 px-2">⭐</button>
             </div>
 
-            <div class="flex flex-col items-center gap-1 w-full sm:w-1/3">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleShuffle()" id="shuffleBtn" class="text-slate-400 hover:text-cyan-400 text-sm">🔀</button>
-                    <button onclick="playPrev()" class="text-slate-300 hover:text-white text-lg">⏮</button>
-                    <button onclick="togglePlay()" id="playPauseBtn" class="bg-cyan-400 text-slate-950 w-10 h-10 rounded-full flex items-center justify-center font-bold hover:bg-cyan-300 transition">▶</button>
-                    <button onclick="playNext()" class="text-slate-300 hover:text-white text-lg">⏭</button>
-                </div>
-                <audio id="audioPlayer" class="w-full hidden"></audio>
+            <!-- Barra de Progreso -->
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span id="currentTime">0:00</span>
+                <input type="range" id="progressBar" value="0" max="100" oninput="seekAudio(this.value)" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                <span id="duration">0:00</span>
             </div>
 
-            <div class="w-full sm:w-1/3 flex justify-end text-xs text-slate-400">
-                <span>Streaming en directo (Sin descargas)</span>
+            <!-- Controles principales -->
+            <div class="flex items-center justify-around">
+                <button onclick="toggleShuffle()" id="shuffleBtn" class="text-slate-400 text-sm p-2 transition">🔀</button>
+                <button onclick="playPrev()" class="text-slate-200 text-xl p-2">⏮</button>
+                <button onclick="togglePlay()" id="playPauseBtn" class="bg-cyan-400 text-slate-950 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg hover:bg-cyan-300 transition">▶</button>
+                <button onclick="playNext()" class="text-slate-200 text-xl p-2">⏭</button>
+                <button onclick="loadRandomTrack()" class="text-slate-400 text-sm p-2 transition">🎲</button>
             </div>
+            <audio id="audioPlayer"></audio>
         </div>
     </footer>
 
+    <!-- Lógica JavaScript optimizada para móviles -->
     <script>
         const audio = document.getElementById('audioPlayer');
         const playPauseBtn = document.getElementById('playPauseBtn');
         const currentTitle = document.getElementById('currentTitle');
         const currentArtist = document.getElementById('currentArtist');
+        const currentCover = document.getElementById('currentCover');
         const trackList = document.getElementById('trackList');
         const favoritesList = document.getElementById('favoritesList');
+        const historyList = document.getElementById('historyList');
+        const progressBar = document.getElementById('progressBar');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
 
+        // Pistas con audios públicos reales 100% compatibles con streaming HTTPS en iPhone
         let tracks = [
-            { id: 1, title: "Acoustic Breeze", artist: "Bensound", audio: "https://www.bensound.com/bensound-music/bensound-acousticbreeze.mp3", cover: "🎸" },
-            { id: 2, title: "Tenderness", artist: "Bensound", audio: "https://www.bensound.com/bensound-music/bensound-tenderness.mp3", cover: "🎹" },
-            { id: 3, title: "Creative Minds", artist: "Bensound", audio: "https://www.bensound.com/bensound-music/bensound-creativeminds.mp3", cover: "🚀" }
+            { id: 1, title: "Nocturne Op. 9 No. 2", artist: "Frédéric Chopin", audio: "https://ia800304.us.archive.0/34/items/ChopinNocturneOp.9No.2_142/Chopin_Nocturne_Op_9_No_2.mp3", cover: "🎹" },
+            { id: 2, title: "Goldberg Variations (Aria)", artist: "J.S. Bach / Glenn Gould", audio: "https://ia801402.us.archive.0/11/items/J.s.BachGoldbergVariationsBWV988-GlennGould1981Piano/01.Aria.mp3", cover: "🎼" },
+            { id: 3, title: "Las Cuatro Estaciones (Primavera)", artist: "Vivaldi", audio: "https://ia800902.us.archive.0/27/items/VivaldiTheFourSeasonsSpringFull/01.ConcertoNo.1InEMajorOp.8Rv269'Spring'-I.Allegro.mp3", cover: "🎻" },
+            { id: 4, title: "Claro de Luna (Moonlight Sonata)", artist: "Beethoven", audio: "https://ia800504.us.archive.0/33/items/BeethovenPianoSonataNo.14Op.27No.2Moonlight-AdagioSostenuto/01.AdagioSostenuto.mp3", cover: "🌙" }
         ];
 
         let favorites = [];
+        let history = [];
         let currentIndex = 0;
         let isPlaying = false;
+        let isShuffle = false;
 
-        function renderTracks() {
-            trackList.innerHTML = '';
-            tracks.forEach((track, index) => {
+        function renderTracks(listToRender = tracks, container = trackList, isSearch = false) {
+            container.innerHTML = '';
+            if (listToRender.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-sm text-center py-6">No se encontraron resultados.</p>';
+                return;
+            }
+            listToRender.forEach((track) => {
+                const realIndex = tracks.findIndex(t => t.id === track.id);
+                const isFav = favorites.some(f => f.id === track.id);
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-2 hover:bg-slate-700/50 rounded-lg cursor-pointer transition";
+                div.className = "flex items-center justify-between p-3 bg-slate-900/60 border border-slate-800/80 rounded-xl active:scale-[0.98] transition cursor-pointer";
                 div.innerHTML = `
-                    <div class="flex items-center gap-3" onclick="loadTrack(${index})">
-                        <span class="text-xl">${track.cover}</span>
-                        <div>
-                            <p class="text-sm font-medium text-slate-200">${track.title}</p>
-                            <p class="text-xs text-slate-400">${track.artist}</p>
+                    <div class="flex items-center gap-3 overflow-hidden" onclick="loadTrack(${realIndex})">
+                        <span class="text-2xl p-2 bg-slate-800/80 rounded-lg">${track.cover}</span>
+                        <div class="overflow-hidden">
+                            <p class="text-sm font-medium text-slate-200 truncate">${track.title}</p>
+                            <p class="text-xs text-slate-400 truncate">${track.artist}</p>
                         </div>
                     </div>
-                    <button onclick="toggleFavorite(${track.id})" class="text-sm text-slate-400 hover:text-yellow-400">⭐</button>
+                    <button onclick="toggleFavorite(${track.id})" class="text-lg p-2 ${isFav ? 'text-amber-400' : 'text-slate-600'}">⭐</button>
                 `;
-                trackList.appendChild(div);
+                container.appendChild(div);
             });
         }
 
@@ -108,9 +144,17 @@
             audio.src = track.audio;
             currentTitle.textContent = track.title;
             currentArtist.textContent = track.artist;
-            audio.play();
-            isPlaying = true;
-            playPauseBtn.textContent = "⏸";
+            currentCover.textContent = track.cover;
+            
+            audio.play().then(() => {
+                isPlaying = true;
+                playPauseBtn.textContent = "⏸";
+                addToHistory(track);
+            }).catch(e => {
+                console.error("Error al reproducir:", e);
+                alert("Toca de nuevo el botón de reproducción si el navegador requiere interacción.");
+            });
+            updateFavButtonState();
         }
 
         function togglePlay() {
@@ -129,7 +173,11 @@
         }
 
         function playNext() {
-            currentIndex = (currentIndex + 1) % tracks.length;
+            if (isShuffle) {
+                currentIndex = Math.floor(Math.random() * tracks.length);
+            } else {
+                currentIndex = (currentIndex + 1) % tracks.length;
+            }
             loadTrack(currentIndex);
         }
 
@@ -138,52 +186,122 @@
             loadTrack(currentIndex);
         }
 
+        function loadRandomTrack() {
+            const randomIndex = Math.floor(Math.random() * tracks.length);
+            loadTrack(randomIndex);
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            const btn = document.getElementById('shuffleBtn');
+            btn.style.color = isShuffle ? '#22d3ee' : '#94a3b8';
+        }
+
         function toggleFavorite(id) {
             const track = tracks.find(t => t.id === id);
-            if (!favorites.some(f => f.id === id)) {
+            const index = favorites.findIndex(f => f.id === id);
+            if (index === -1) {
                 favorites.push(track);
             } else {
-                favorites = favorites.filter(f => f.id !== id);
+                favorites.splice(index, 1);
             }
+            renderTracks();
             renderFavorites();
+            updateFavButtonState();
+        }
+
+        function toggleCurrentFavorite() {
+            if (tracks[currentIndex]) {
+                toggleFavorite(tracks[currentIndex].id);
+            }
+        }
+
+        function updateFavButtonState() {
+            const currentTrack = tracks[currentIndex];
+            const currentFavBtn = document.getElementById('currentFavBtn');
+            const isFav = favorites.some(f => f.id === currentTrack.id);
+            currentFavBtn.style.color = isFav ? '#fbbf24' : '#64748b';
         }
 
         function renderFavorites() {
             if (favorites.length === 0) {
-                favoritesList.innerHTML = '<p class="italic text-slate-400">No hay favoritos guardados aún.</p>';
+                favoritesList.innerHTML = '<p class="text-slate-500 text-sm text-center py-8">No tienes favoritos guardados aún.</p>';
                 return;
             }
-            favoritesList.innerHTML = '';
-            favorites.forEach(fav => {
-                const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-2 bg-slate-900/40 rounded-lg";
-                div.innerHTML = `
-                    <span class="text-xs text-slate-200 truncate">${fav.title} - ${fav.artist}</span>
-                `;
-                favoritesList.appendChild(div);
-            });
+            renderTracks(favorites, favoritesList);
+        }
+
+        function addToHistory(track) {
+            history = history.filter(h => h.id !== track.id);
+            history.unshift(track);
+            if (history.length > 20) history.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-slate-500 text-sm text-center py-8">El historial está vacío.</p>';
+                return;
+            }
+            renderTracks(history, historyList);
         }
 
         function searchMusic() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filtered = tracks.filter(t => t.title.toLowerCase().includes(query) || t.artist.toLowerCase().includes(query));
-            trackList.innerHTML = '';
-            filtered.forEach((track, index) => {
-                const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-2 hover:bg-slate-700/50 rounded-lg cursor-pointer transition";
-                div.innerHTML = `
-                    <div class="flex items-center gap-3" onclick="loadTrack(${tracks.indexOf(track)})">
-                        <span class="text-xl">${track.cover}</span>
-                        <div>
-                            <p class="text-sm font-medium text-slate-200">${track.title}</p>
-                            <p class="text-xs text-slate-400">${track.artist}</p>
-                        </div>
-                    </div>
-                `;
-                trackList.appendChild(div);
-            });
+            renderTracks(filtered, trackList);
         }
 
+        function switchTab(tab) {
+            document.getElementById('viewExplore').classList.add('hidden');
+            document.getElementById('viewFavorites').classList.add('hidden');
+            document.getElementById('viewHistory').classList.add('hidden');
+            
+            document.getElementById('tabExplore').className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-slate-400 transition";
+            document.getElementById('tabFavorites').className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-slate-400 transition";
+            document.getElementById('tabHistory').className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-slate-400 transition";
+
+            if (tab === 'explore') {
+                document.getElementById('viewExplore').classList.remove('hidden');
+                document.getElementById('tabExplore').className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 transition";
+            } else if (tab === 'favorites') {
+                document.getElementById('viewFavorites').classList.remove('hidden');
+                document.getElementById('tabFavorites').className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 transition";
+                renderFavorites();
+            } else if (tab === 'history') {
+                document.getElementById('viewHistory').classList.remove('hidden');
+                document.getElementById('tabHistory').className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 transition";
+                renderHistory();
+            }
+        }
+
+        // Actualizar barra de progreso de audio
+        audio.addEventListener('timeupdate', () => {
+            if (audio.duration) {
+                const progress = (audio.currentTime / audio.duration) * 100;
+                progressBar.value = progress;
+                currentTimeEl.textContent = formatTime(audio.currentTime);
+                durationEl.textContent = formatTime(audio.duration);
+            }
+        });
+
+        audio.addEventListener('ended', () => {
+            playNext();
+        });
+
+        function seekAudio(value) {
+            if (audio.duration) {
+                audio.currentTime = (value / 100) * audio.duration;
+            }
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Inicializar
         renderTracks();
     </script>
 </body>
